@@ -62,4 +62,84 @@ def getecgdf(path):
     
     return ecgdf_concatenated
 
-# Concatenate all DataFrames into a single DataFrame
+
+
+# Concatenate all DataFrames into a single DataFrame forvital pacth files and sort it brom the start date to end date
+
+# getting vitals dataframe
+def getvitaldf(path):
+    # path=''
+    directories=os.listdir(path)
+    vitaldf = []
+    for file in directories:   
+        if file.endswith('_vitals.csv'):
+           ecgpath = os.path.join(path, file)
+        
+           if os.path.exists(ecgpath):
+              ecg = pd.read_csv(ecgpath, header=None)
+              print(f'"first file{file}"')
+              # Get amplitude and timestamp columns
+              Posture = ecg.iloc[:,5].values.flatten()
+              Steps = ecg.iloc[:,4].values.flatten()
+              Temperature= ecg.iloc[:,3].values.flatten()
+              Respirationrate = ecg.iloc[:,2].values.flatten()
+              RRinterval = ecg.iloc[:,6].values.flatten()
+              Heartrate = ecg.iloc[:,1 ].values.flatten()
+              timestamps = ecg.iloc[:,0].values.flatten()
+              print('flattened')
+              
+              if ecg.isna().any().any()==True:
+              # Create DataFrame for current file  
+                 df = pd.DataFrame({'Time': timestamps , 'Heart Rate':Heartrate ,'Respiration Rate':Respirationrate,'Temperature':Temperature,'Stepscount':Steps,'Posture':Posture,'R-R Interval':RRinterval})
+                 print('dataframe')
+              # Append DataFrame to list
+                 vitaldf.append(df)
+                 
+    ecgdf_concatenated = pd.concat(vitaldf, ignore_index=True)
+    
+    
+    Time=ecgdf_concatenated['Time'].values
+    files_sorted_by_mtime = sorted(Time)
+    slicedtime=[(str(times))[:-3] for times in Time]
+    slicedtime=[(int(times)) for times in slicedtime]
+    timesinseconds=pd.to_datetime(slicedtime,unit='s')
+    ecgdf_concatenated['New Time']=timesinseconds
+    #sort time
+    ecgdf_concatenated.set_index('New Time', inplace=True)
+    # Sort DataFrame by index (epochs)
+    ecgdf_concatenated.sort_index(inplace=True)
+
+           
+    if len(pd.date_range(start=timesinseconds[0],end=timesinseconds[-1])) == 5:
+       print('The length of recording is 5 days,concatenated files for 5 days')
+
+    elif len(pd.date_range(start=timesinseconds[0],end=timesinseconds[-1])) == 6:
+         print('The length of recording is 6 days,concatenating files for 6 days')
+                     
+    elif len(pd.date_range(start=timesinseconds[0],end=timesinseconds[-1])) == 7:
+         print('The length of recording is 7 days,concatenating files for 7 days')    
+
+    elif len(pd.date_range(start=timesinseconds[0],end=timesinseconds[-1])) <= 4:
+         print(f'"The length of recording is {len(pd.date_range(start=timesinseconds[0],end=timesinseconds[-1]))},concatenating files for {len(pd.date_range(start=timesinseconds[0],end=timesinseconds[-1]))} days  "')
+    
+    return ecgdf_concatenated
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
